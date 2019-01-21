@@ -6,25 +6,82 @@
 		<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
         <style>
             #map {
-                height:500px;
-				width:500px;
+                height: 500px;
+				width: 500px;
+				float: left;
             }
+			#forms {
+				float: left;
+				margin: 50px;
+			}
             html, body {
                 height: 100%;
                 margin: 0;
                 padding: 0;
             }
+			p {
+				font-family: "Tahoma", Geneva, sans-serif;
+				font-size: 11px;
+				font-weight: bold;
+			}
+			input[type="text"], textarea {
+				padding: 6px;
+				width: 200px;
+				border-radius: 5px;
+				border: 1px solid grey;
+			}
+			button {
+				padding: 10px;
+				border-radius: 5px;
+			}
+			input:focus {
+				outline: none;
+			}
+			textarea:focus {
+				outline: none;
+			}
+			button:focus {
+				outline: none;
+			}
         </style>
     </head>
     <body>
-        <div id="map"></div>
+		<div id="map"></div>
+		<div id="forms">
+			<p>Location Coordinates</p>
+			<div style="margin:10px"><p id="lat">Latitude: </p><p id="long">Longitude: </p></div>
+			<p>Location Name</p>
+			<input type="text" placeholder="Pick a name for this location!">
+			<p>Location Type</p>
+			<select>
+				<option value="food">Restaurant</option>
+				<option value="club">Club</option>
+				<option value="shop">Shop</option>
+				<option value="museum">Museum</option>
+				<option value="other">Other</option>
+			</select>
+			<p>Location Description</p>
+			<textarea rows="10" cols="50" placeholder="Describe this location!" style="resize: none;"></textarea><br>
+			<button onclick="submit();" style="margin-top: 10px;">Submit!</button>
+		</div>
 		<script>
 			let map = L.map("map").setView([52.5077302, 13.469056], 20);
 			mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
         	L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         		attribution: 'Map data &copy; ' + mapLink,
         		maxZoom: 18,
-            }).addTo(map);
+			}).addTo(map);
+			
+			let longitude = document.getElementById("long");
+			let latitude = document.getElementById("lat");
+
+			function clickHandler(e) {
+				console.log(e.latlng);
+				longitude.innerHTML="Longitude: " + e.latlng.lng;
+				latitude.innerHTML="Latitude: " + e.latlng.lat;
+
+			}
+			map.on("click", clickHandler);
 		</script>
     </body>
 </html>
