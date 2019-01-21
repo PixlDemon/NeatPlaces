@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <title>MapsApp</title>
+        <meta name="viewport" content="initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+		<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+        <style>
+            #map {
+                height:500px;
+				width:500px;
+            }
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+		<script>
+			let map = L.map("map").setView([52.5077302, 13.469056], 20);
+			mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        	L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        		attribution: 'Map data &copy; ' + mapLink,
+        		maxZoom: 18,
+            }).addTo(map);
+		</script>
+    </body>
+</html>
