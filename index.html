@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>MapsApp</title>
+        <title>NeatPlaces</title>
         <meta name="viewport" content="initial-scale=1.0">
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
 		<script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
@@ -51,9 +51,9 @@
 			<p>Location Coordinates</p>
 			<div style="margin:10px"><p id="lat">Latitude: </p><p id="long">Longitude: </p></div>
 			<p>Location Name</p>
-			<input type="text" placeholder="Pick a name for this location!">
+			<input id="locationname" type="text" placeholder="Pick a name for this location!">
 			<p>Location Type</p>
-			<select>
+			<select id="locationtype">
 				<option value="food">Restaurant</option>
 				<option value="club">Club</option>
 				<option value="shop">Shop</option>
@@ -61,27 +61,101 @@
 				<option value="other">Other</option>
 			</select>
 			<p>Location Description</p>
-			<textarea rows="10" cols="50" placeholder="Describe this location!" style="resize: none;"></textarea><br>
-			<button onclick="submit();" style="margin-top: 10px;">Submit!</button>
+			<textarea id="locationdescription" rows="10" cols="50" placeholder="Describe this location!" style="resize: none;"></textarea><br>
+			<button onclick="App.submitLocationData();" style="margin-top: 10px;">Submit!</button>
 		</div>
 		<script>
-			let map = L.map("map").setView([52.5077302, 13.469056], 20);
-			mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-        	L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        		attribution: 'Map data &copy; ' + mapLink,
-        		maxZoom: 18,
-			}).addTo(map);
-			
-			let longitude = document.getElementById("long");
-			let latitude = document.getElementById("lat");
+			let username;
+			let App = {
+				ui: {
+					reset() {
+						App.ui.locationname.value = App.ui.locationdescription.value = "";
+						App.ui.longitude.innerHTML = "Longitude: ";
+						App.ui.latitude.innerHTML = "Latitude: ";
+						App.ui.locationtype.selectedIndex = 0;
+					}
+				},
+				init() {
+					if(!localStorage.value) {
+						username = prompt("Pick a username!");
+						localStorage.value = username;
+					} else {
+						username = localStorage.value;
+					}
+					places = [];
+					App.ui.longitude = document.getElementById("long");
+					App.ui.latitude = document.getElementById("lat");
+					App.ui.locationname = document.getElementById("locationname");
+					App.ui.locationtype = document.getElementById("locationtype");
+					App.ui.locationdescription = document.getElementById("locationdescription");
 
-			function clickHandler(e) {
-				console.log(e.latlng);
-				longitude.innerHTML="Longitude: " + e.latlng.lng;
-				latitude.innerHTML="Latitude: " + e.latlng.lat;
+					App.ui.map = L.map("map").setView([52.5077302, 13.469056], 20);
+					let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
 
+        			L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        				attribution: 'Map data &copy; ' + mapLink,
+        				maxZoom: 18,
+					}).addTo(App.ui.map);
+
+					App.ui.markerIcon = new L.Icon({
+						iconUrl: "map-marker.png",
+						iconSize: [41, 41],
+						iconAnchor: [20, 51],
+						popupAnchor: [0, -51]                                 
+					});
+
+					App.ui.map.on("click", App.clickHandler);
+
+					document.onkeydown = (e) => {
+						console.log(e.keyCode);
+						if(e.keyCode == 13) {
+							App.submitLocationData();
+						}
+					}
+				},
+				clickHandler(e) {
+					App.ui.longitude.innerHTML="Longitude: " + e.latlng.lng;
+					App.ui.latitude.innerHTML="Latitude: " + e.latlng.lat;
+
+				},
+				submitLocationData() {
+					if(App.ui.longitude.innerHTML == "Longitude: ") {
+						alert("Please click somewhere on the map first!");
+						return;
+					}
+
+					let newPlace = new Place(
+						parseFloat(App.ui.longitude.innerHTML.split("Longitude: ")[1]),
+						parseFloat(App.ui.latitude.innerHTML.split("Latitude: ")[1]),
+						App.ui.locationname.value,
+						App.ui.locationtype.options[App.ui.locationtype.selectedIndex].text,
+						App.ui.locationdescription.value
+					);
+					App.ui.reset();
+				}
 			}
-			map.on("click", clickHandler);
+
+			class Place {
+				constructor(lat, long, name, type, description) {
+					Object.assign(this, {lat, long, name, type, description});
+					places.push(this);
+
+					this.marker = L.marker([this.long, this.lat], {icon: App.ui.markerIcon}).addTo(App.ui.map);
+					this.marker.bindPopup(this.getPopupHtml());
+				}
+				getPopupHtml() {
+					let html = 
+					"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
+					"<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
+					"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
+					"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.name + "</p>" +
+					"<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + username + "</p>";
+
+					return html;
+				}
+			}
+
+			App.init();
 		</script>
     </body>
 </html>
