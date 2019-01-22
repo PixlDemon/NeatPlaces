@@ -73,6 +73,7 @@
 						App.ui.longitude.innerHTML = "Longitude: ";
 						App.ui.latitude.innerHTML = "Latitude: ";
 						App.ui.locationtype.selectedIndex = 0;
+						App.ui.map.removeLayer(App.ui.indicator);
 					}
 				},
 				init() {
@@ -89,6 +90,7 @@
 					App.ui.locationtype = document.getElementById("locationtype");
 					App.ui.locationdescription = document.getElementById("locationdescription");
 
+
 					App.ui.map = L.map("map").setView([52.5077302, 13.469056], 20);
 					let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
 
@@ -103,6 +105,12 @@
 						iconAnchor: [20, 51],
 						popupAnchor: [0, -51]                                 
 					});
+					App.ui.indicatorIcon = new L.Icon({
+						iconUrl: "indicator.png",
+						iconSize: [41, 41],
+						iconAnchor: [20, 51],
+						popupAnchor: [0, -51]  
+					})
 
 					App.ui.map.on("click", App.clickHandler);
 
@@ -117,10 +125,23 @@
 					App.ui.longitude.innerHTML="Longitude: " + e.latlng.lng;
 					App.ui.latitude.innerHTML="Latitude: " + e.latlng.lat;
 
+					if(!App.ui.indicator) {
+						App.ui.indicator = L.marker([e.latlng.lat, e.latlng.lng], {icon: App.ui.indicatorIcon}).addTo(App.ui.map);
+					} else {
+						App.ui.indicator.setLatLng(e.latlng);
+					}
+
+					if(!App.ui.map.hasLayer(App.ui.indicator)) {
+						App.ui.indicator.addTo(App.ui.map);
+					}
 				},
 				submitLocationData() {
 					if(App.ui.longitude.innerHTML == "Longitude: ") {
 						alert("Please click somewhere on the map first!");
+						return;
+					}
+					if([App.ui.locationname, App.ui.locationdescription].some(e=>e.value=="")) {
+						alert("Please fill out all the fields");
 						return;
 					}
 
