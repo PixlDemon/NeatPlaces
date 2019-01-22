@@ -67,11 +67,12 @@
 		<script>
 			let socket = new WebSocket("ws://127.0.0.1:8000");
 			let places = [];
-			
+
 			socket.onopen = e => {
 
 			}
 			socket.onmessage = m => {
+				console.log(m.data);
 				if(true) {
 					data = JSON.parse(m.data);
 					let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
