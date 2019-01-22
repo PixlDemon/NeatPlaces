@@ -12,7 +12,6 @@ fs.readFile("./places.json", (err, json)=>{
 		throw err;
 	}
 	places = JSON.parse(json);
-	console.log(typeof(places));
 });
 
 fs.readFile("./index.html", (err, html)=>{
@@ -22,11 +21,22 @@ fs.readFile("./index.html", (err, html)=>{
 	httpServer = http.createServer(function(req, res){
 		let request = url.parse(req.url, true);
 		let action = request.pathname;
-	  
+		
+		console.log("[+] Serving " + action);
 		if (action == "/indicator.png" || action == "/map-marker.png") {
 		   let img = fs.readFileSync("." + action);
 		   res.writeHead(200, {"Content-Type": "image/png" });
 		   res.end(img, "binary");
+		} else if (action == "/main.js") {
+			let js = fs.readFileSync("." + action);
+			res.writeHead(200, {"Content-Type": "text/javascript"});
+			res.write(js);
+			res.end();
+		} else if (action == "/style.css") {
+			let css = fs.readFileSync("." + action);
+			res.writeHead(200, {"Content-Type": "text/css"});
+			res.write(css);
+			res.end();
 		} else { 
 		   res.writeHead(200, {"Content-Type": "text/html" });
 		   res.write(html);
@@ -43,7 +53,6 @@ fs.readFile("./index.html", (err, html)=>{
 
 	wsServer.on("request", (request)=>{
 		let connection = request.accept(null, request.origin);
-		console.log("[+] New connection from " + connection.origin);
 		clients.push(connection);
 		places.forEach(p=>connection.send(JSON.stringify(p)));
 
