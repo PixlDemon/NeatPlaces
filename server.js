@@ -23,7 +23,7 @@ fs.readFile("./index.html", (err, html)=>{
 		let action = request.pathname;
 		
 		console.log("[+] Serving " + action);
-		if (action == "/indicator.png" || action == "/map-marker.png") {
+		if (action == "/indicator.png" || action == "/map-marker.png" || action == "/youarehere.png" || action == "/locationmarker.png") {
 		   let img = fs.readFileSync("." + action);
 		   res.writeHead(200, {"Content-Type": "image/png" });
 		   res.end(img, "binary");

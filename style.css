@@ -39,12 +39,16 @@ button:focus {
     float: left;
     margin: 20px;
     padding: 10px;
+    height: 90%;
+    overflow-y: scroll;
 }
 .recommendation {
-    margin-top: 10px;
-    padding: 10px;
+    padding: 20px;
 }
 .recommendation:hover {
-    background: lightblue;
+    background: lightgrey;
     cursor: pointer;
+}
+.recommendationSelected {
+    background: lightblue !important;
 }
