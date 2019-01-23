@@ -20,22 +20,25 @@ let App = {
         }
         
         navigator.geolocation.getCurrentPosition(pos => {
-            App.ui.clientPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
+            App.ui.userPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
                 icon: App.ui.youarehere
             }).addTo(App.ui.map);
-            App.ui.clientPosition.bindPopup("<p style='margin:5px;'><b>" + App.username +"</b></p>");
+            App.ui.userPosition.bindPopup("<p style='margin:5px;'><b>" + App.username +"</b></p>");
+
+            App.userLatitude = pos.coords.latitude;
+            App.userLongitude = pos.coords.longitude;
 
             fetch(App.genFoursquaresRequest({
                 id:"A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
                 secret:"CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
                 limit:10,
-                lat: 52.50764,
-                long:13.46876,
+                lat: App.userLatitude,
+                long: App.userLongitude,
                 query:""
             })).then(response => {
                 return response.json();
             }).then(json => {
-                console.log(JSON.stringify(json));
+                json.response.groups[0].items.forEach(i => App.addRecommendation({name: i.venue.name, address: i.venue.location.address, type: i.venue.categories[0].name, distance: i.venue.location.distance}));
             }).catch(error => {
                 throw error;
             });
@@ -48,6 +51,7 @@ let App = {
         App.ui.locationname = document.getElementById("locationname");
         App.ui.locationtype = document.getElementById("locationtype");
         App.ui.locationdescription = document.getElementById("locationdescription");
+        App.ui.recommendations = document.getElementById("recommendations");
 
 
         App.ui.map = L.map("map").setView([52.5077302, 13.469056], 20);
@@ -84,12 +88,25 @@ let App = {
             data = JSON.parse(m.data);
             let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
         }
-        document.onkeydown = e => {
-            console.log(e.keyCode);
-            if (e.keyCode == 13) {
-                App.submitLocationData();
+
+        document.addEventListener("click", e => {
+            let target = e.target || e.srcElement;
+            if(target.classList.contains("recommendation") || target.parentElement.classList.contains("recommendation")) {
+                App.ui.selectedLocationIndicator = App.ui.selectedLocationIndicator.setLatLng([]) || L.marker
             }
-        }
+        });
+    },
+    addRecommendation(params) {
+        let div = document.createElement("div");
+        div.classList.add("recommendation");
+        div.innerHTML =
+        "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
+        "<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
+        "<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>";
+        App.ui.recommendations.appendChild(div);
+
+        return div;
+        
     },
     genFoursquaresRequest(params) {
         return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id +"&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
