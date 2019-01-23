@@ -18,6 +18,30 @@ let App = {
         } else {
             App.username = localStorage.value;
         }
+        
+        navigator.geolocation.getCurrentPosition(pos => {
+            App.ui.clientPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
+                icon: App.ui.youarehere
+            }).addTo(App.ui.map);
+            App.ui.clientPosition.bindPopup("<p style='margin:5px;'><b>" + App.username +"</b></p>");
+
+            fetch(App.genFoursquaresRequest({
+                id:"A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
+                secret:"CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
+                limit:10,
+                lat: 52.50764,
+                long:13.46876,
+                query:""
+            })).then(response => {
+                return response.json();
+            }).then(json => {
+                console.log(JSON.stringify(json));
+            }).catch(error => {
+                throw error;
+            });
+
+        });
+
         places = [];
         App.ui.longitude = document.getElementById("long");
         App.ui.latitude = document.getElementById("lat");
@@ -45,7 +69,13 @@ let App = {
             iconSize: [41, 41],
             iconAnchor: [20, 51],
             popupAnchor: [0, -51]
-        })
+        });
+        App.ui.youarehere = new L.Icon({
+            iconUrl: "youarehere.png",
+            iconSize: [28.2, 80],
+            iconAnchor: [14.1, 80],
+            popupAnchor: [0, -85]
+        });
 
         App.ui.map.on("click", App.clickHandler);
 
@@ -54,12 +84,15 @@ let App = {
             data = JSON.parse(m.data);
             let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
         }
-        document.onkeydown = (e) => {
+        document.onkeydown = e => {
             console.log(e.keyCode);
             if (e.keyCode == 13) {
                 App.submitLocationData();
             }
         }
+    },
+    genFoursquaresRequest(params) {
+        return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id +"&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
     },
     clickHandler(e) {
         App.ui.longitude.innerHTML = "Longitude: " + e.latlng.lng;
