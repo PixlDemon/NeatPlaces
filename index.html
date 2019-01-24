@@ -8,8 +8,15 @@
     </head>
     <body>
 		<div id="map"></div>
+		<div id="recommendations" style="width:20%;">
+			<p id="title">Places near you</p>
+			<div id="places">
+
+			</div>
+			<button id="addlocation"onclick="App.toggleAddLocationUi();">Add your own location</button>
+		</div>
 		<div id="forms">
-			<p>Location Coordinates</p>
+			<p>Location Coordinates (Click on the map)</p>
 			<div style="margin:10px"><p id="lat">Latitude: </p><p id="long">Longitude: </p></div>
 			<p>Location Name</p>
 			<input id="locationname" type="text" placeholder="Pick a name for this location!">
@@ -23,12 +30,8 @@
 			</select>
 			<p>Location Description</p>
 			<textarea id="locationdescription" rows="10" cols="50" placeholder="Describe this location!" style="resize: none;"></textarea><br>
-			<button onclick="App.submitLocationData();" style="margin-top: 10px;">Submit!</button>
+			<button onclick="App.submitLocationData();">Submit!</button>
+			<script src="main.js"></script>
 		</div>
-		<p style="margin-top:50px;">Places near you</p>
-		<div id="recommendations">
-			
-		</div>
-		<script src="main.js"></script>
     </body>
 </html>
