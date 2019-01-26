@@ -10,52 +10,62 @@ html, body {
     margin: 0;
     padding: 0;
 }
-
+#locationsearch {
+    background: none;
+    margin: 15x;
+    padding: 0;
+    margin-left: 20%;
+    color:white;
+    border-bottom: 2px solid white;
+    caret-color: white;
+}
 #map {
     height: 100%;
-    width: 80%;
+    width: 75%;
     float: left;
     animation-name: resizeMap;
     animation-duration: 1s;
     animation-fill-mode: forwards;
 }
-#forms {
+#addlocationui {
     width: 10%;
     float: left;
     padding: 50px;
+    padding-top: 70px;
     display: none; float:left;
 }
-#title {
+#locationlistheader {
     padding:20px;
     font-size: 15px;
     color: #ededed;
     background-color: #4f8fff;
     margin: 0 !important;
+    display: flex;
 }
-#recommendations {
+#foursquaredisplay {
     float: left;
     margin-left: 0;
     margin-top: 0;
     padding-left: 0;
     height: 100%;
 }
-#recommendations {
+#foursquaredisplay {
     height: 100%;
     float: top;
     
 }
-#places {
+#locationlist {
     height: 100%;
     overflow-y: scroll;
 }
-.recommendation {
+.locationlistentry {
     padding: 20px;
 }
-.recommendation:hover {
+.locationlistentry:hover {
     background: lightgrey;
     cursor: pointer;
 }
-.recommendationSelected {
+.locationlistentrySelected {
     background: lightblue !important;
 }
 input[type="text"], textarea {
@@ -65,11 +75,17 @@ input[type="text"], textarea {
 }
 button {
     padding: 10px 0;
-    border-radius: 5px;
+    border: none;
     position: sticky;
     bottom: 0;
     width: 100%;
     margin-top: 10px;
+    background-color: lightgrey;
+    outline: none;
+}
+button:hover {
+    background-color: grey;
+    color:white;
 }
 p {
     font-family: "Tahoma", Geneva, sans-serif;
@@ -82,6 +98,6 @@ p {
 }
 
 @keyframes resizeMap {
-    from {width: 80%;}
-    to {width: 60%; }
+    from {width: 75%;}
+    to {width: 50%; }
 }
