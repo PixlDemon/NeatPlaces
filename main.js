@@ -1,129 +1,228 @@
 let App = {
-    socket: new WebSocket("ws://10.20.0.103:8000"),
-    places: [],
-    username: "Anon",
-    ui: {
-        reset() {
-            App.ui.locationname.value = App.ui.locationdescription.value = "";
-            App.ui.longitude.innerHTML = "Longitude: ";
-            App.ui.latitude.innerHTML = "Latitude: ";
-            App.ui.locationtype.selectedIndex = 0;
-            App.ui.map.removeLayer(App.ui.indicator);
-        }
-    },
-    init() {
-        if (!localStorage.value) {
-            App.username = prompt("Pick a username!");
-            localStorage.value = App.username;
-        } else {
-            App.username = localStorage.value;
-        }
-        places = [];
-        App.ui.longitude = document.getElementById("long");
-        App.ui.latitude = document.getElementById("lat");
-        App.ui.locationname = document.getElementById("locationname");
-        App.ui.locationtype = document.getElementById("locationtype");
-        App.ui.locationdescription = document.getElementById("locationdescription");
+	socket: new WebSocket("ws://10.20.0.103:8000"),
+	recommendationData: [],
+	username: "Anon",
+	UI: {
+		reset() {
+			App.UI.locationNameInput.value = App.UI.locationDescriptionInput.value = "";
+			App.UI.longitudeDisplay.innerHTML = "Longitude: ";
+			App.UI.latitudeDisplay.innerHTML = "Latitude: ";
+			App.UI.locationTypeDropdown.selectedIndex = 0;
+			App.UI.map.removeLayer(App.UI.indicator);
+		}
+	},
+	init() {
+		if (!localStorage.value) {
+			App.username = prompt("Pick a username!");
+			localStorage.value = App.username;
+		} else {
+			App.username = localStorage.value;
+		}
+
+		App.UI.longitudeDisplay = document.getElementById("long");
+		App.UI.latitudeDisplay = document.getElementById("lat");
+		App.UI.locationNameInput = document.getElementById("locationname");
+		App.UI.locationTypeDropdown = document.getElementById("locationtype");
+		App.UI.locationDescriptionInput = document.getElementById("locationdescription");
+		App.UI.locationList = document.getElementById("places");
+		App.UI.foursquareDisplay = document.getElementById("recommendations");
+		App.UI.submitLocationUI = document.getElementById("forms");
+		App.UI.mapContainer = document.getElementById("map");
+		App.UI.mapContainer.style.animationPlayState = "paused";
+		App.UI.foursquareDisplay.style.display = "none";
+
+		navigator.geolocation.getCurrentPosition(pos => {
+			App.UI.userPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
+				icon: App.UI.userPositionIndicator
+			}).addTo(App.UI.map);
+			App.UI.userPosition.bindPopup("<p style='margin:5px;'><b>" + App.username +"</b></p>");
+
+			App.userLatitude = pos.coords.latitude;
+			App.userLongitude = pos.coords.longitude;
+
+			fetch(App.genFoursquaresRequest({
+				id:"A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
+				secret:"CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
+				limit:30,
+				lat: App.userLatitude,
+				long: App.userLongitude,
+				query:""
+			})).then(response => {
+				return response.json();
+			}).then(json => {
+				json.response.groups[0].items.forEach(i => App.addRecommendation({
+						name: i.venue.name, 
+						address: i.venue.location.address, 
+						type: i.venue.categories[0].name, 
+						distance: i.venue.location.distance, 
+						lat: i.venue.location.lat, 
+						long: i.venue.location.lng
+				}));
+				App.UI.foursquareDisplay.style.display = "block";
+			}).catch(error => {
+				throw error;
+			});
+
+		});
+
+		App.UI.map = L.map("map", {zoomSnap: 0.1}).setView([52.5077302, 13.469056], 20);
+		let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+
+		L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: 'Map data &copy; ' + mapLink,
+			maxZoom: 18,
+		}).addTo(App.UI.map);
+
+		App.UI.submittedLocationIndicator = new L.Icon({
+			iconUrl: "map-marker.png",
+			iconSize: [41, 41],
+			iconAnchor: [20, 41],
+			popupAnchor: [0, -51]
+		});
+		App.UI.currentSelectedCoordinatesIndicator = new L.Icon({
+			iconUrl: "indicator.png",
+			iconSize: [41, 41],
+			iconAnchor: [20, 41],
+			popupAnchor: [0, -51]
+		});
+		App.UI.userPositionIndicator = new L.Icon({
+			iconUrl: "userpositionindicator.png",
+			iconSize: [28.2, 80],
+			iconAnchor: [14.1, 80],
+			popupAnchor: [0, -85]
+		});
+		App.UI.foursquareLocationIndicator = new L.icon({
+			iconUrl: "locationmarker.png",
+			iconSize: [41, 41],
+			iconAnchor: [20, 41],
+			popupAnchor: [0, -51]
+		});
 
 
-        App.ui.map = L.map("map").setView([52.5077302, 13.469056], 20);
-        let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+		App.UI.map.on("click", App.clickHandler);
 
-        L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'Map data &copy; ' + mapLink,
-            maxZoom: 18,
-        }).addTo(App.ui.map);
+		App.socket.onmessage = m => {
+			console.log(m.data);
+			data = JSON.parse(m.data);
+			let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
+		}
 
-        App.ui.markerIcon = new L.Icon({
-            iconUrl: "map-marker.png",
-            iconSize: [41, 41],
-            iconAnchor: [20, 41],
-            popupAnchor: [0, -51]
-        });
-        App.ui.indicatorIcon = new L.Icon({
-            iconUrl: "indicator.png",
-            iconSize: [41, 41],
-            iconAnchor: [20, 51],
-            popupAnchor: [0, -51]
-        })
+		let clickedRecommendation;
+		App.UI.locationList.onclick = e => {
+			if(!(e.target == App.UI.foursquareDisplay)) {
+				clickedRecommendation != undefined ? clickedRecommendation.classList.remove("recommendationSelected") : 0;
 
-        App.ui.map.on("click", App.clickHandler);
+				clickedRecommendation = (e.target.classList.contains("recommendation")?e.target:e.target.parentElement);
+				let clickedRecommendationData = App.recommendationData[Array.prototype.indexOf.call(App.UI.locationList.children, clickedRecommendation)];
+				
+				App.UI.selectedfoursquareLocationIndicator = (App.UI.selectedfoursquareLocationIndicator ? 
 
-        App.socket.onmessage = m => {
-            console.log(m.data);
-            data = JSON.parse(m.data);
-            let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
-        }
-        document.onkeydown = (e) => {
-            console.log(e.keyCode);
-            if (e.keyCode == 13) {
-                App.submitLocationData();
-            }
-        }
-    },
-    clickHandler(e) {
-        App.ui.longitude.innerHTML = "Longitude: " + e.latlng.lng;
-        App.ui.latitude.innerHTML = "Latitude: " + e.latlng.lat;
+					App.UI.selectedfoursquareLocationIndicator
+					.setLatLng([clickedRecommendationData.lat, clickedRecommendationData.long]) : 
+					L.marker([clickedRecommendationData.lat, clickedRecommendationData.long], {icon: App.UI.foursquareLocationIndicator})
+					.addTo(App.UI.map));
+				
+					App.UI.selectedfoursquareLocationIndicator.bindPopup(clickedRecommendation.innerHTML);
 
-        if (!App.ui.indicator) {
-            App.ui.indicator = L.marker([e.latlng.lat, e.latlng.lng], {
-                icon: App.ui.indicatorIcon
-            }).addTo(App.ui.map);
-        } else {
-            App.ui.indicator.setLatLng(e.latlng);
-        }
+				clickedRecommendation.classList.add("recommendationSelected");
+				
+				App.UI.map.panTo([App.userLatitude - (App.userLatitude - App.UI.selectedfoursquareLocationIndicator.getLatLng().lat) / 2, App.userLongitude - (App.userLongitude - App.UI.selectedfoursquareLocationIndicator.getLatLng().lng) / 2]);
+				let interval = setInterval(x=>{
+					if(App.UI.map.getBounds().contains(App.UI.selectedfoursquareLocationIndicator.getLatLng())){
+						clearInterval(interval);
+					} else {
+						App.UI.map.setZoom(App.UI.map.getZoom() - 1);
+					}
+				}, 1000/60);
+			}
+		}
+	},
+	addRecommendation(params) {
+		let div = document.createElement("div");
+		div.classList.add("recommendation");
+		div.innerHTML =
+		"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
+		"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
+		"<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>";
+		App.UI.locationList.appendChild(div);
+		App.recommendationData.push(params);
+		return div;
+		
+	},
+	genFoursquaresRequest(params) {
+		return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id +"&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
+	},
+	clickHandler(e) {
+		App.UI.longitudeDisplay.innerHTML = "Longitude: " + e.latlng.lng;
+		App.UI.latitudeDisplay.innerHTML = "Latitude: " + e.latlng.lat;
 
-        if (!App.ui.map.hasLayer(App.ui.indicator)) {
-            App.ui.indicator.addTo(App.ui.map);
-        }
-    },
-    submitLocationData() {
-        if (App.ui.longitude.innerHTML == "Longitude: ") {
-            alert("Please click somewhere on the map first!");
-            return;
-        }
-        if ([App.ui.locationname, App.ui.locationdescription].some(e => e.value == "")) {
-            alert("Please fill out all the fields");
-            return;
-        }
-        App.socket.send(JSON.stringify({
-            lat: parseFloat(App.ui.longitude.innerHTML.split("Longitude: ")[1]),
-            long: parseFloat(App.ui.latitude.innerHTML.split("Latitude: ")[1]),
-            name: App.ui.locationname.value,
-            type: App.ui.locationtype.options[App.ui.locationtype.selectedIndex].text,
-            description: App.ui.locationdescription.value,
-            creator: App.username
-        }));
-        App.ui.reset();
-    }
+		if (!App.UI.indicator) {
+			App.UI.indicator = L.marker([e.latlng.lat, e.latlng.lng], {
+				icon: App.UI.currentSelectedCoordinatesIndicator
+			}).addTo(App.UI.map);
+		} else {
+			App.UI.indicator.setLatLng(e.latlng);
+		}
+
+		if (!App.UI.map.hasLayer(App.UI.indicator)) {
+			App.UI.indicator.addTo(App.UI.map);
+		}
+	},
+	submitLocationData() {
+		if (App.UI.longitudeDisplay.innerHTML == "Longitude: ") {
+			alert("Please click somewhere on the map first!");
+			return;
+		}
+		if ([App.UI.locationNameInput, App.UI.locationDescriptionInput].some(e => e.value == "")) {
+			alert("Please fill out all the fields");
+			return;
+		}
+		App.socket.send(JSON.stringify({
+			lat: parseFloat(App.UI.longitudeDisplay.innerHTML.split("Longitude: ")[1]),
+			long: parseFloat(App.UI.latitudeDisplay.innerHTML.split("Latitude: ")[1]),
+			name: App.UI.locationNameInput.value,
+			type: App.UI.locationTypeDropdown.options[App.UI.locationTypeDropdown.selectedIndex].text,
+			description: App.UI.locationDescriptionInput.value,
+			creator: App.username
+		}));
+		App.UI.reset();
+		App.toggleAddLocationUi();
+	},
+	toggleAddLocationUi() {
+		App.UI.mapContainer.style.animation = "none";
+		setTimeout(x => {
+			animationDirection = animationDirection == "normal" ? "reverse" : "normal";
+			App.UI.mapContainer.style.animation = "resizeMap 0.5s ease 1 " + animationDirection + " forwards";
+		}, 0.000000000001);
+		App.UI.submitLocationUI.style.display = (App.UI.submitLocationUI.style.display == "block" ? "none" : "block");
+	}
 }
-
+let animationDirection = "reverse";
 class Place {
-    constructor(lat, long, name, type, description, creator) {
-        Object.assign(this, {
-            lat,
-            long,
-            name,
-            type,
-            description,
-            creator
-        });
-        places.push(this);
+	constructor(lat, long, name, type, description, creator) {
+		Object.assign(this, {
+			lat,
+			long,
+			name,
+			type,
+			description,
+			creator
+		});
 
-        this.marker = L.marker([this.long, this.lat], {
-            icon: App.ui.markerIcon
-        }).addTo(App.ui.map);
-        this.marker.bindPopup(this.getPopupHtml());
-    }
-    getPopupHtml() {
-        let html =
-            "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
-            "<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
-            "<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
-            "<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + this.creator + "</p>";
+		this.marker = L.marker([this.long, this.lat], {
+			icon: App.UI.submittedLocationIndicator
+		}).addTo(App.UI.map);
+		this.marker.bindPopup(this.getPopupHtml());
+	}
+	getPopupHtml() {
+		let html =
+			"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
+			"<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
+			"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
+			"<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + this.creator + "</p>";
 
-        return html;
-    }
+		return html;
+	}
 }
 
 App.init();

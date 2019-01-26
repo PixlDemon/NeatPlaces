@@ -1,38 +1,87 @@
-#map {
-    height: 500px;
-    width: 500px;
-    float: left;
+html {
+    overflow: hidden;
+    height: 100%;
 }
-#forms {
-    float: left;
-    margin: 50px;
+body {
+    height: 100%;
+    overflow: disabled;
 }
 html, body {
-    height: 100%;
     margin: 0;
     padding: 0;
+}
+
+#map {
+    height: 100%;
+    width: 80%;
+    float: left;
+    animation-name: resizeMap;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+}
+#forms {
+    width: 10%;
+    float: left;
+    padding: 50px;
+    display: none; float:left;
+}
+#title {
+    padding:20px;
+    font-size: 15px;
+    color: #ededed;
+    background-color: #4f8fff;
+    margin: 0 !important;
+}
+#recommendations {
+    float: left;
+    margin-left: 0;
+    margin-top: 0;
+    padding-left: 0;
+    height: 100%;
+}
+#recommendations {
+    height: 100%;
+    float: top;
+    
+}
+#places {
+    height: 100%;
+    overflow-y: scroll;
+}
+.recommendation {
+    padding: 20px;
+}
+.recommendation:hover {
+    background: lightgrey;
+    cursor: pointer;
+}
+.recommendationSelected {
+    background: lightblue !important;
+}
+input[type="text"], textarea {
+    padding: 6px;
+    width: 200px;
+    border: none;
+}
+button {
+    padding: 10px 0;
+    border-radius: 5px;
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    margin-top: 10px;
 }
 p {
     font-family: "Tahoma", Geneva, sans-serif;
     font-size: 11px;
     font-weight: bold;
+    visibility: inherit;
 }
-input[type="text"], textarea {
-    padding: 6px;
-    width: 200px;
-    border-radius: 5px;
-    border: 1px solid grey;
-}
-button {
-    padding: 10px;
-    border-radius: 5px;
-}
-input:focus {
+*:focus {
     outline: none;
 }
-textarea:focus {
-    outline: none;
-}
-button:focus {
-    outline: none;
+
+@keyframes resizeMap {
+    from {width: 80%;}
+    to {width: 60%; }
 }
