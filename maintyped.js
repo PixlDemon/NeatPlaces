@@ -1,34 +1,37 @@
-var Place = /** @class */ (function () {
-    function Place(lat, long, name, type, description, creator) {
+class LocationData {
+    constructor() { }
+}
+class Place extends LocationData {
+    constructor(lat, long, name, type, description, creator) {
+        super();
         assign(this, {
-            lat: lat,
-            long: long,
-            name: name,
-            type: type,
-            description: description,
-            creator: creator
+            lat,
+            long,
+            name,
+            type,
+            description,
+            creator
         });
         this.marker = L.marker([this.long, this.lat], {
             icon: App.UI.submittedLocationIndicator
         }).addTo(App.UI.map);
         this.marker.bindPopup(this.getPopupHtml());
     }
-    Place.prototype.getPopupHtml = function () {
-        var html = "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
+    getPopupHtml() {
+        let html = "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
             "<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
             "<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
             "<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + this.creator + "</p>";
         return html;
-    };
-    return Place;
-}());
+    }
+}
 function assign(a, b) {
-    Object.getOwnPropertyNames(b).forEach(function (p) {
+    Object.getOwnPropertyNames(b).forEach(p => {
         a[p] = b[p];
         console.log(p);
     });
 }
-var App = {
+let App = {
     socket: new WebSocket("ws://10.20.0.103:8000"),
     locationData: [],
     username: "Anon",
@@ -55,7 +58,7 @@ var App = {
         currentSelectedCoordinatesIndicator: null,
         foursquareLocationIndicator: null,
         selectedFoursquareLocationMarker: null,
-        reset: function () {
+        reset() {
             App.UI.locationNameInput.value = App.UI.locationDescriptionInput.value = "";
             App.UI.longitudeDisplay.innerHTML = "Longitude: ";
             App.UI.latitudeDisplay.innerHTML = "Latitude: ";
@@ -63,27 +66,20 @@ var App = {
             App.UI.map.removeLayer(App.UI.indicator);
         }
     },
-    init: function () {
+    init() {
         if (!localStorage.value) {
-            App.username = prompt("Pick a username!");
-            localStorage.value = App.username;
+            try {
+                App.username = prompt ? prompt("Pick a username!") : "Moritz";
+                localStorage.value = App.username;
+            }
+            catch (_a) { }
         }
         else {
             App.username = localStorage.value;
         }
-        /*		App.UI.longitudeDisplay = document.getElementById("long");
-                App.UI.latitudeDisplay = document.getElementById("lat");
-                App.UI.locationNameInput = document.getElementById("locationname");
-                App.UI.locationTypeDropdown = document.getElementById("locationtype");
-                App.UI.locationDescriptionInput = document.getElementById("locationdescription");
-                App.UI.locationList = document.getElementById("locationlist");
-                App.UI.foursquareDisplay = document.getElementById("foursquaredisplay");
-                App.UI.submitLocationUI = document.getElementById("addlocationui");
-                App.UI.mapContainer = document.getElementById("map");
-                App.UI.locationSearchBar = document.getElementById("locationsearch");*/
         App.UI.mapContainer.style.animationPlayState = "paused";
         App.UI.foursquareDisplay.style.display = "none";
-        navigator.geolocation.getCurrentPosition(function (pos) {
+        navigator.geolocation.getCurrentPosition(pos => {
             App.UI.userPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
                 icon: App.UI.userPositionIcon
             }).addTo(App.UI.map);
@@ -97,20 +93,20 @@ var App = {
                 lat: App.userLatitude,
                 long: App.userLongitude,
                 query: ""
-            })).then(function (response) {
+            })).then(response => {
                 return response.json();
-            }).then(function (json) {
+            }).then(json => {
                 App.genLocationListHTML(json.response);
                 App.UI.foursquareDisplay.style.display = "block";
-            })["catch"](function (error) {
+            }).catch(error => {
                 throw error;
             });
         });
         App.UI.map = L.map("map", { zoomSnap: 0.1 }).setView([52.5077302, 13.469056], 20);
-        var mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
         L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'Map data &copy; ' + mapLink,
-            maxZoom: 18
+            maxZoom: 18,
         }).addTo(App.UI.map);
         App.UI.submittedLocationIndicator = new L.Icon({
             iconUrl: "map-marker.png",
@@ -137,13 +133,13 @@ var App = {
             popupAnchor: [0, -51]
         });
         App.UI.map.on("click", App.clickHandler);
-        App.socket.onmessage = function (m) {
-            var data = JSON.parse(m.data);
+        App.socket.onmessage = (m) => {
+            let data = JSON.parse(m.data);
             console.log(data);
-            var place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
+            let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
         };
-        var clickedRecommendation;
-        App.UI.locationList.onclick = function (e) {
+        let clickedRecommendation;
+        App.UI.locationList.onclick = e => {
             if (!(e.target == App.UI.foursquareDisplay)) {
                 clickedRecommendation != undefined ? clickedRecommendation.classList.remove("locationlistentrySelected") : 0;
                 clickedRecommendation = e.target;
@@ -151,7 +147,7 @@ var App = {
                     clickedRecommendation = clickedRecommendation.parentElement;
                 }
                 console.log(clickedRecommendation.id);
-                var clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])]; //Array.prototype.indexOf.call(App.UI.locationList.children, clickedRecommendation)];
+                let clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])];
                 App.UI.selectedFoursquareLocationMarker = (App.UI.selectedFoursquareLocationMarker ?
                     App.UI.selectedFoursquareLocationMarker
                         .setLatLng([clickedlocationData.lat, clickedlocationData.long]) :
@@ -161,9 +157,9 @@ var App = {
                 App.UI.selectedFoursquareLocationMarker.openPopup();
                 clickedRecommendation.classList.add("locationlistentrySelected");
                 App.UI.map.panTo([App.userLatitude - (App.userLatitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lat) / 2, App.userLongitude - (App.userLongitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lng) / 2]);
-                var interval_1 = setInterval(function (x) {
+                let interval = setInterval(function () {
                     if (App.UI.map.getBounds().contains(App.UI.selectedFoursquareLocationMarker.getLatLng())) {
-                        clearInterval(interval_1);
+                        clearInterval(interval);
                     }
                     else {
                         App.UI.map.setZoom(App.UI.map.getZoom() - 1);
@@ -172,25 +168,25 @@ var App = {
             }
         };
     },
-    locationSearch: function () {
+    locationSearch() {
         fetch(App.genfoursquareRequest({
             id: "A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
             secret: "CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
             limit: 30,
             lat: App.userLatitude,
             long: App.userLongitude,
-            query: App.UI.locationSearchBar.value
-        })).then(function (response) {
+            query: App.UI.locationSearchBar.value,
+        })).then(response => {
             return response.json();
-        }).then(function (json) {
+        }).then(json => {
             App.genLocationListHTML(json.response);
             App.UI.foursquareDisplay.style.display = "block";
-        })["catch"](function (error) {
+        }).catch(error => {
             throw error;
         });
     },
-    genLocationListEntryHTML: function (params, index) {
-        var HTML = "<div class='locationlistentry' id='listentry" + index + "'>" +
+    genLocationListEntryHTML(params, index) {
+        let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" +
             "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
             "<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
             "<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
@@ -198,27 +194,27 @@ var App = {
         App.locationData.push(params);
         return HTML;
     },
-    genfoursquareRequest: function (params) {
+    genfoursquareRequest(params) {
         return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id + "&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
     },
-    genLocationListHTML: function (response) {
-        var HTML = "";
+    genLocationListHTML(response) {
+        let HTML = "";
         App.locationData = [];
-        response.groups[0].items.sort(function (a, b) {
+        response.groups[0].items.sort((a, b) => {
             return a.venue.location.distance - b.venue.location.distance;
         });
-        response.groups[0].items.forEach(function (i, index) { return HTML += App.genLocationListEntryHTML({
+        response.groups[0].items.forEach((i, index) => HTML += App.genLocationListEntryHTML({
             name: i.venue.name,
             address: i.venue.location.address,
             type: i.venue.categories[0].name,
             distance: i.venue.location.distance,
             lat: i.venue.location.lat,
             long: i.venue.location.lng
-        }, index); });
+        }, index));
         App.UI.locationList.innerHTML = HTML;
         return HTML;
     },
-    clickHandler: function (e) {
+    clickHandler(e) {
         App.UI.longitudeDisplay.innerHTML = "Longitude: " + e.latlng.lng;
         App.UI.latitudeDisplay.innerHTML = "Latitude: " + e.latlng.lat;
         if (!App.UI.indicator) {
@@ -233,12 +229,12 @@ var App = {
             App.UI.indicator.addTo(App.UI.map);
         }
     },
-    submitLocationData: function () {
+    submitLocationData() {
         if (App.UI.longitudeDisplay.innerHTML == "Longitude: ") {
             alert("Please click somewhere on the map first!");
             return;
         }
-        if ([App.UI.locationNameInput, App.UI.locationDescriptionInput].some(function (e) { return e.value == ""; })) {
+        if ([App.UI.locationNameInput, App.UI.locationDescriptionInput].some(e => e.value == "")) {
             alert("Please fill out all the fields");
             return;
         }
@@ -253,9 +249,9 @@ var App = {
         App.UI.reset();
         App.toggleAddLocationUi();
     },
-    toggleAddLocationUi: function () {
+    toggleAddLocationUi() {
         App.UI.mapContainer.style.animation = "none";
-        setTimeout(function (x) {
+        setTimeout(function () {
             App.UI.mapContainer.style.animation = "resizeMap 0.5s ease 1 " + App.nextToggleAddLocationUIAnimationDirection + " forwards";
             App.nextToggleAddLocationUIAnimationDirection = App.nextToggleAddLocationUIAnimationDirection == "normal" ? "reverse" : "normal";
         }, 0.000000000001);
@@ -263,3 +259,4 @@ var App = {
     }
 };
 App.init();
+//# sourceMappingURL=maintyped.js.map

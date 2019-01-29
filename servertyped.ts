@@ -1,4 +1,4 @@
-declare function require(name: string);
+declare function require(name: string): any;
 let WebSocketServer = require("websocket").server;
 let http = require("http");
 let fs = require("fs");
@@ -24,7 +24,7 @@ fs.readFile("./places.json", (err: string, json: string)=>{
 	places = JSON.parse(json);
 });
 
-httpServer = http.createServer(function(req, res){
+httpServer = http.createServer(function(req: any, res: any){
 	let request = url.parse(req.url, true);
 	let action: string = request.pathname;
 	
@@ -53,7 +53,7 @@ httpServer = http.createServer(function(req, res){
 		res.end();
 	}
 });
-httpServer.listen(8000, x=>{
+httpServer.listen(8000, function(){
 	console.log("[!] Server listening on port 8000...\n");
 });
 
@@ -61,12 +61,12 @@ let wsServer = new WebSocketServer({
 	httpServer: httpServer
 });
 
-wsServer.on("request", (request)=>{
+wsServer.on("request", (request: any)=>{
 	let connection = request.accept(null, request.origin);
 	clients.push(connection);
 	places.forEach(p=>connection.send(JSON.stringify(p)));
 	
-	connection.on("message", msg=>{
+	connection.on("message", (msg: any)=>{
 		console.log(msg.utf8Data);
 		clients.forEach(c=>c.send(msg.utf8Data));
         places.push(JSON.parse(msg.utf8Data));

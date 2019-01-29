@@ -1,15 +1,20 @@
+class LocationData {
+	lat: number;
+	long: number;
+	name: string;
+	type: string;
+	description?: string;
+	creator?: string;
+	address?: string;
+	distance?: number;
 
-
-class Place {
-    lat: number;
-    long: number;
-    name: string;
-    type: string;
-    description: string;
-    creator: string;
-    marker: any;
-
+	constructor() {}
+}
+declare let L: any;
+class Place extends LocationData{
+	marker: any;
 	constructor(lat: number, long: number, name: string, type: string, description: string, creator: string) {
+		super();
 		assign(this, {
 			lat,
 			long,
@@ -34,8 +39,7 @@ class Place {
 		return html;
 	}
 }
-
-function assign(a,b) {
+function assign(a: any, b: any) {
 	Object.getOwnPropertyNames(b).forEach(p => {
 		a[p] = b[p];
 		console.log(p);
@@ -44,33 +48,33 @@ function assign(a,b) {
 
 let App = {
 	socket: <WebSocket> new WebSocket("ws://10.20.0.103:8000"),
-	locationData: <Place[]> [],
+	locationData: <LocationData[]> [],
 	username: <string> "Anon",
-    nextToggleAddLocationUIAnimationDirection: <string> "normal",
-    userPosition: <any> null,
-    userLatitude: <number> null,
-    userLongitude: <number> null,
+	nextToggleAddLocationUIAnimationDirection: <string> "normal",
+	userPosition: <any> null,
+	userLatitude: <number> null,
+	userLongitude: <number> null,
 
 	UI: {
-        locationNameInput: <HTMLInputElement> document.getElementById("locationname"),
-        longitudeDisplay: <HTMLElement> document.getElementById("long"),
-        latitudeDisplay: <HTMLElement> document.getElementById("lat"),
-        locationTypeDropdown: <HTMLSelectElement> document.getElementById("locationtype"),
-        locationDescriptionInput: <HTMLTextAreaElement> document.getElementById("locationdescription"),
-        locationList: <HTMLElement> document.getElementById("locationlist"),
-        foursquareDisplay: <HTMLElement> document.getElementById("foursquaredisplay"),
-        submitLocationUI: <HTMLElement> document.getElementById("addlocationui"),
-        mapContainer: <HTMLElement> document.getElementById("map"),
-        locationSearchBar: <HTMLInputElement> document.getElementById("locationsearch"),
+		locationNameInput: <HTMLInputElement> document.getElementById("locationname"),
+		longitudeDisplay: <HTMLElement> document.getElementById("long"),
+		latitudeDisplay: <HTMLElement> document.getElementById("lat"),
+		locationTypeDropdown: <HTMLSelectElement> document.getElementById("locationtype"),
+		locationDescriptionInput: <HTMLTextAreaElement> document.getElementById("locationdescription"),
+		locationList: <HTMLElement> document.getElementById("locationlist"),
+		foursquareDisplay: <HTMLElement> document.getElementById("foursquaredisplay"),
+		submitLocationUI: <HTMLElement> document.getElementById("addlocationui"),
+		mapContainer: <HTMLElement> document.getElementById("map"),
+		locationSearchBar: <HTMLInputElement> document.getElementById("locationsearch"),
 
-        indicator: <any> null,
-        map: <any> null,
-        userPositionIcon: <any> null,
-        submittedLocationIndicator: <any> null,
-        userPosition: <any> null,
-        currentSelectedCoordinatesIndicator: <any> null,
-        foursquareLocationIndicator: <any> null,
-        selectedFoursquareLocationMarker: <any> null,
+		indicator: <any> null,
+		map: <any> null,
+		userPositionIcon: <any> null,
+		submittedLocationIndicator: <any> null,
+		userPosition: <any> null,
+		currentSelectedCoordinatesIndicator: <any> null,
+		foursquareLocationIndicator: <any> null,
+		selectedFoursquareLocationMarker: <any> null,
 
 
 		reset(): void {
@@ -83,8 +87,10 @@ let App = {
 	},
 	init() {
 		if (!localStorage.value) {
-			App.username = prompt("Pick a username!");
-			localStorage.value = App.username;
+			try {
+				App.username = prompt ? prompt("Pick a username!") : "Moritz";
+				localStorage.value = App.username;
+			} catch {}
 		} else {
 			App.username = localStorage.value;
 		}
@@ -155,25 +161,25 @@ let App = {
 
 		App.UI.map.on("click", App.clickHandler);
 
-		App.socket.onmessage = m => {
+		App.socket.onmessage = (m: any)=> {
 			let data = JSON.parse(m.data);
 			console.log(data);
 			let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
 		}
 
-		let clickedRecommendation;
+		let clickedRecommendation: HTMLElement;
 
 		App.UI.locationList.onclick = e => {
 			if(!(e.target == App.UI.foursquareDisplay)) {
 				clickedRecommendation != undefined ? clickedRecommendation.classList.remove("locationlistentrySelected") : 0;
 
-				clickedRecommendation = e.target;
+				clickedRecommendation = <HTMLElement>e.target;
 
 				while(!clickedRecommendation.id.includes("listentry")) {
 					clickedRecommendation = clickedRecommendation.parentElement;
 				}
 				console.log(clickedRecommendation.id);
-				let clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])];//Array.prototype.indexOf.call(App.UI.locationList.children, clickedRecommendation)];
+				let clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])];
 				
 				App.UI.selectedFoursquareLocationMarker = (App.UI.selectedFoursquareLocationMarker ? 
 
@@ -188,7 +194,7 @@ let App = {
 				clickedRecommendation.classList.add("locationlistentrySelected");
 				
 				App.UI.map.panTo([App.userLatitude - (App.userLatitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lat) / 2, App.userLongitude - (App.userLongitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lng) / 2]);
-				let interval = setInterval(x=>{
+				let interval: number = setInterval(function(){
 					if(App.UI.map.getBounds().contains(App.UI.selectedFoursquareLocationMarker.getLatLng())){
 						clearInterval(interval);
 					} else {
@@ -216,7 +222,7 @@ let App = {
 		});
 
 	},
-	genLocationListEntryHTML(params, index) {
+	genLocationListEntryHTML(params: LocationData, index: number) {
 		let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" +
 		"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
 		"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
@@ -226,18 +232,18 @@ let App = {
 		return HTML;
 		
 	},
-	genfoursquareRequest(params) {
+	genfoursquareRequest(params: any) {
 		return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id +"&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
 	},
-	genLocationListHTML(response) {
+	genLocationListHTML(response: any) {
 		
-		let HTML = "";
+		let HTML: string = "";
 		App.locationData = [];
-		response.groups[0].items.sort((a, b) => {
+		response.groups[0].items.sort((a: any, b: any) => {
 			return a.venue.location.distance - b.venue.location.distance;
 		});
 
-		response.groups[0].items.forEach((i, index) => HTML += App.genLocationListEntryHTML({
+		response.groups[0].items.forEach((i: any, index: number) => HTML += App.genLocationListEntryHTML({
 			name: i.venue.name, 
 			address: i.venue.location.address, 
 			type: i.venue.categories[0].name, 
@@ -249,7 +255,7 @@ let App = {
 		App.UI.locationList.innerHTML = HTML;
 		return HTML;
 	},
-	clickHandler(e) {
+	clickHandler(e: any) {
 		App.UI.longitudeDisplay.innerHTML = "Longitude: " + e.latlng.lng;
 		App.UI.latitudeDisplay.innerHTML = "Latitude: " + e.latlng.lat;
 
@@ -287,7 +293,7 @@ let App = {
 	},
 	toggleAddLocationUi() {
 		App.UI.mapContainer.style.animation = "none";
-		setTimeout(x => {
+		setTimeout(function() {
 			App.UI.mapContainer.style.animation = "resizeMap 0.5s ease 1 " + App.nextToggleAddLocationUIAnimationDirection + " forwards";
 			App.nextToggleAddLocationUIAnimationDirection = App.nextToggleAddLocationUIAnimationDirection == "normal" ? "reverse" : "normal";
 		}, 0.000000000001);
