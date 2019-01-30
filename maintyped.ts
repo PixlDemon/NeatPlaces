@@ -1,80 +1,53 @@
-class LocationData {
+interface LocationData {
 	lat: number;
 	long: number;
 	name: string;
 	type: string;
-	description?: string;
-	creator?: string;
-	address?: string;
-	distance?: number;
-
-	constructor() {}
+	address: string;
+	distance: number;
+	rating: number;
 }
 declare let L: any;
-class Place extends LocationData{
-	marker: any;
-	constructor(lat: number, long: number, name: string, type: string, description: string, creator: string) {
-		super();
-		assign(this, {
-			lat,
-			long,
-			name,
-			type,
-			description,
-			creator
-		});
-
-		this.marker = L.marker([this.long, this.lat], {
-			icon: App.UI.submittedLocationIndicator
-		}).addTo(App.UI.map);
-		this.marker.bindPopup(this.getPopupHtml());
-	}
-	getPopupHtml(): string {
-		let html =
-			"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
-			"<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
-			"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
-			"<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + this.creator + "</p>";
-
-		return html;
-	}
+function addLocation(data: LocationData, description: string, creator: string): void {
+	let marker = L.marker([data.long, data.lat], {
+		icon: App.UI.submittedLocationIndicator
+	}).addTo(App.UI.map);
+	marker.bindPopup(
+		"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + data.name + "</p>" +
+		"<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + data.type + "</p>" +
+		"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + description + "</p>" +
+		"<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + creator + "</p>"
+	);
 }
-function assign(a: any, b: any) {
-	Object.getOwnPropertyNames(b).forEach(p => {
-		a[p] = b[p];
-		console.log(p);
-	});
-}
-
 let App = {
-	socket: <WebSocket> new WebSocket("ws://10.20.0.103:8000"),
-	locationData: <LocationData[]> [],
-	username: <string> "Anon",
-	nextToggleAddLocationUIAnimationDirection: <string> "normal",
-	userPosition: <any> null,
-	userLatitude: <number> null,
-	userLongitude: <number> null,
+	socket: <WebSocket>new WebSocket("ws://10.20.0.103:8000"),
+	locationData: <LocationData[]>[],
+	username: <string>"Anon",
+	nextToggleAddLocationUIAnimationDirection: <string>"normal",
+	userPosition: <any>null,
+	userLatitude: <number>null,
+	userLongitude: <number>null,
 
 	UI: {
-		locationNameInput: <HTMLInputElement> document.getElementById("locationname"),
-		longitudeDisplay: <HTMLElement> document.getElementById("long"),
-		latitudeDisplay: <HTMLElement> document.getElementById("lat"),
-		locationTypeDropdown: <HTMLSelectElement> document.getElementById("locationtype"),
-		locationDescriptionInput: <HTMLTextAreaElement> document.getElementById("locationdescription"),
-		locationList: <HTMLElement> document.getElementById("locationlist"),
-		foursquareDisplay: <HTMLElement> document.getElementById("foursquaredisplay"),
-		submitLocationUI: <HTMLElement> document.getElementById("addlocationui"),
-		mapContainer: <HTMLElement> document.getElementById("map"),
-		locationSearchBar: <HTMLInputElement> document.getElementById("locationsearch"),
+		locationNameInput: <HTMLInputElement>document.getElementById("locationname"),
+		longitudeDisplay: <HTMLElement>document.getElementById("long"),
+		latitudeDisplay: <HTMLElement>document.getElementById("lat"),
+		locationTypeDropdown: <HTMLSelectElement>document.getElementById("locationtype"),
+		locationDescriptionInput: <HTMLTextAreaElement>document.getElementById("locationdescription"),
+		locationList: <HTMLElement>document.getElementById("locationlist"),
+		foursquareDisplay: <HTMLElement>document.getElementById("foursquaredisplay"),
+		submitLocationUI: <HTMLElement>document.getElementById("addlocationui"),
+		mapContainer: <HTMLElement>document.getElementById("map"),
+		locationSearchBar: <HTMLInputElement>document.getElementById("locationsearch"),
 
-		indicator: <any> null,
-		map: <any> null,
-		userPositionIcon: <any> null,
-		submittedLocationIndicator: <any> null,
-		userPosition: <any> null,
-		currentSelectedCoordinatesIndicator: <any> null,
-		foursquareLocationIndicator: <any> null,
-		selectedFoursquareLocationMarker: <any> null,
+		indicator: <any>null,
+		map: <any>null,
+		userPositionIcon: <any>null,
+		submittedLocationIndicator: <any>null,
+		userPosition: <any>null,
+		currentSelectedCoordinatesIndicator: <any>null,
+		foursquareLocationIndicator: <any>null,
+		selectedFoursquareLocationMarker: <any>null,
 
 
 		reset(): void {
@@ -90,7 +63,7 @@ let App = {
 			try {
 				App.username = prompt ? prompt("Pick a username!") : "Moritz";
 				localStorage.value = App.username;
-			} catch {}
+			} catch { }
 		} else {
 			App.username = localStorage.value;
 		}
@@ -102,22 +75,22 @@ let App = {
 			App.UI.userPosition = L.marker([pos.coords.latitude, pos.coords.longitude], {
 				icon: App.UI.userPositionIcon
 			}).addTo(App.UI.map);
-			App.UI.userPosition.bindPopup("<p style='margin:5px;'><b>" + App.username +"</b></p>");
+			App.UI.userPosition.bindPopup("<p style='margin:5px;'><b>" + App.username + "</b></p>");
 
 			App.userLatitude = pos.coords.latitude;
 			App.userLongitude = pos.coords.longitude;
 
 			fetch(App.genfoursquareRequest({
-				id:"A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
-				secret:"CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
-				limit:30,
+				id: "A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
+				secret: "CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
+				limit: 30,
 				lat: App.userLatitude,
 				long: App.userLongitude,
-				query:""
+				query: ""
 			})).then(response => {
 				return response.json();
 			}).then(json => {
-				App.genLocationListHTML(json.response);
+				App.genLocationList(json.response);
 				App.UI.foursquareDisplay.style.display = "block";
 			}).catch(error => {
 				throw error;
@@ -125,7 +98,7 @@ let App = {
 
 		});
 
-		App.UI.map = L.map("map", {zoomSnap: 0.1}).setView([52.5077302, 13.469056], 20);
+		App.UI.map = L.map("map", { zoomSnap: 0.1 }).setView([52.5077302, 13.469056], 20);
 		let mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
 
 		L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -161,61 +134,65 @@ let App = {
 
 		App.UI.map.on("click", App.clickHandler);
 
-		App.socket.onmessage = (m: any)=> {
+		App.socket.onmessage = (m: any) => {
 			let data = JSON.parse(m.data);
-			console.log(data);
-			let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
+			addLocation({ lat: data.lat, long: data.long, name: data.name, type: data.type, address: "", distance: 0, rating: 0}, data.description, data.creator);
 		}
 
 		let clickedRecommendation: HTMLElement;
 
 		App.UI.locationList.onclick = e => {
-			if(!(e.target == App.UI.foursquareDisplay)) {
+			if (!(e.target == App.UI.foursquareDisplay)) {
 				clickedRecommendation != undefined ? clickedRecommendation.classList.remove("locationlistentrySelected") : 0;
 
 				clickedRecommendation = <HTMLElement>e.target;
 
-				while(!clickedRecommendation.id.includes("listentry")) {
+				while (!clickedRecommendation.id.includes("listentry")) {
 					clickedRecommendation = clickedRecommendation.parentElement;
 				}
 				console.log(clickedRecommendation.id);
 				let clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])];
-				
-				App.UI.selectedFoursquareLocationMarker = (App.UI.selectedFoursquareLocationMarker ? 
+
+				App.UI.selectedFoursquareLocationMarker = (App.UI.selectedFoursquareLocationMarker ?
 
 					App.UI.selectedFoursquareLocationMarker
-					.setLatLng([clickedlocationData.lat, clickedlocationData.long]) : 
-					L.marker([clickedlocationData.lat, clickedlocationData.long], {icon: App.UI.foursquareLocationIndicator})
-					.addTo(App.UI.map));
-				
-					App.UI.selectedFoursquareLocationMarker.bindPopup(clickedRecommendation.innerHTML);
-					App.UI.selectedFoursquareLocationMarker.openPopup();
+						.setLatLng([clickedlocationData.lat, clickedlocationData.long]) :
+					L.marker([clickedlocationData.lat, clickedlocationData.long], { icon: App.UI.foursquareLocationIndicator })
+						.addTo(App.UI.map));
+
+				App.UI.selectedFoursquareLocationMarker.bindPopup(
+					"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + clickedlocationData.name + "</p>" +
+					"<p style='font-size: 10px; margin: 3px; margin-bottom: 4px; font-weight: normal;'>" + clickedlocationData.type + "</p>" +
+					"<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + clickedlocationData.address + "</p>" +
+					"<p style='font-size: 8px; margin: 3px; margin-top: 4px; font-weight: normal;'>" + clickedlocationData.distance + "m away</p>"
+				);
+				App.UI.selectedFoursquareLocationMarker.openPopup();
 
 				clickedRecommendation.classList.add("locationlistentrySelected");
-				
+
 				App.UI.map.panTo([App.userLatitude - (App.userLatitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lat) / 2, App.userLongitude - (App.userLongitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lng) / 2]);
-				let interval: number = setInterval(function(){
-					if(App.UI.map.getBounds().contains(App.UI.selectedFoursquareLocationMarker.getLatLng())){
+				let interval: number = setInterval(function () {
+					if (App.UI.map.getBounds().contains(App.UI.selectedFoursquareLocationMarker.getLatLng())) {
 						clearInterval(interval);
 					} else {
 						App.UI.map.setZoom(App.UI.map.getZoom() - 1);
 					}
-				}, 1000/60);
+				}, 1000 / 60);
 			}
 		}
 	},
 	locationSearch() {
 		fetch(App.genfoursquareRequest({
-			id:"A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
-			secret:"CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
-			limit:30,
+			id: "A0TFATANX3LKQXFIP1B2ZJCEISHD13OYM5NK0S2SJERWGV44",
+			secret: "CZK531LCMFXQF0TXHBLULTF5QQZLQVJBJQY2C1CWU1TOFVB5",
+			limit: 30,
 			lat: App.userLatitude,
 			long: App.userLongitude,
-			query:App.UI.locationSearchBar.value,
+			query: App.UI.locationSearchBar.value,
 		})).then(response => {
 			return response.json();
 		}).then(json => {
-			App.genLocationListHTML(json.response);
+			App.genLocationList(json.response);
 			App.UI.foursquareDisplay.style.display = "block";
 		}).catch(error => {
 			throw error;
@@ -224,19 +201,26 @@ let App = {
 	},
 	genLocationListEntryHTML(params: LocationData, index: number) {
 		let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" +
-		"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
-		"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
-		"<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
-		"</div>"
+			"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
+			"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
+			"<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
+			"<ul class='rating'>" +
+			"<li><button onclick='App.giveStar(this, 1);'></button></li>" +
+			"<li><button onclick='App.giveStar(this, 2);'></button></li>" +
+			"<li><button onclick='App.giveStar(this, 3);'></button></li>" +
+			"<li><button onclick='App.giveStar(this, 5);'></button></li>" +
+			"<li><button onclick='App.giveStar(this, 5);'></button></li>" +
+			"</ul>" +
+			"</div>"
 		App.locationData.push(params);
 		return HTML;
-		
+
 	},
 	genfoursquareRequest(params: any) {
-		return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id +"&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
+		return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id + "&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
 	},
-	genLocationListHTML(response: any) {
-		
+	genLocationList(response: any) {
+
 		let HTML: string = "";
 		App.locationData = [];
 		response.groups[0].items.sort((a: any, b: any) => {
@@ -244,12 +228,13 @@ let App = {
 		});
 
 		response.groups[0].items.forEach((i: any, index: number) => HTML += App.genLocationListEntryHTML({
-			name: i.venue.name, 
-			address: i.venue.location.address, 
-			type: i.venue.categories[0].name, 
-			distance: i.venue.location.distance, 
-			lat: i.venue.location.lat, 
-			long: i.venue.location.lng
+			name: i.venue.name,
+			address: i.venue.location.address,
+			type: i.venue.categories[0].name,
+			distance: i.venue.location.distance,
+			lat: i.venue.location.lat,
+			long: i.venue.location.lng,
+			rating: 0,
 		}, index));
 
 		App.UI.locationList.innerHTML = HTML;
@@ -293,11 +278,18 @@ let App = {
 	},
 	toggleAddLocationUi() {
 		App.UI.mapContainer.style.animation = "none";
-		setTimeout(function() {
+		setTimeout(function () {
 			App.UI.mapContainer.style.animation = "resizeMap 0.5s ease 1 " + App.nextToggleAddLocationUIAnimationDirection + " forwards";
 			App.nextToggleAddLocationUIAnimationDirection = App.nextToggleAddLocationUIAnimationDirection == "normal" ? "reverse" : "normal";
 		}, 0.000000000001);
 		App.UI.submitLocationUI.style.display = (App.UI.submitLocationUI.style.display == "block" ? "none" : "block");
+	},
+	giveStar(button: HTMLButtonElement, rating: number) {
+		let ratedLocation = button.parentElement.parentElement.parentElement;
+		console.log(ratedLocation.id);
+
+		let ratedLocationData: LocationData = App.locationData[parseInt(ratedLocation.id.split("listentry")[1])];
+		ratedLocationData.rating = rating;
 	}
 }
 App.init();

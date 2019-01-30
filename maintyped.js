@@ -1,35 +1,11 @@
-class LocationData {
-    constructor() { }
-}
-class Place extends LocationData {
-    constructor(lat, long, name, type, description, creator) {
-        super();
-        assign(this, {
-            lat,
-            long,
-            name,
-            type,
-            description,
-            creator
-        });
-        this.marker = L.marker([this.long, this.lat], {
-            icon: App.UI.submittedLocationIndicator
-        }).addTo(App.UI.map);
-        this.marker.bindPopup(this.getPopupHtml());
-    }
-    getPopupHtml() {
-        let html = "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + this.name + "</p>" +
-            "<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + this.type + "</p>" +
-            "<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + this.description + "</p>" +
-            "<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + this.creator + "</p>";
-        return html;
-    }
-}
-function assign(a, b) {
-    Object.getOwnPropertyNames(b).forEach(p => {
-        a[p] = b[p];
-        console.log(p);
-    });
+function addLocation(data, description, creator) {
+    let marker = L.marker([data.long, data.lat], {
+        icon: App.UI.submittedLocationIndicator
+    }).addTo(App.UI.map);
+    marker.bindPopup("<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + data.name + "</p>" +
+        "<p style='font-size: 10px; margin: 3px; margin-bottom: 10px; font-weight: normal;'>" + data.type + "</p>" +
+        "<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + description + "</p>" +
+        "<p style='font-size: 8px; margin: 3px; margin-top: 15px; font-weight: normal;'>Submitted by " + creator + "</p>");
 }
 let App = {
     socket: new WebSocket("ws://10.20.0.103:8000"),
@@ -96,7 +72,7 @@ let App = {
             })).then(response => {
                 return response.json();
             }).then(json => {
-                App.genLocationListHTML(json.response);
+                App.genLocationList(json.response);
                 App.UI.foursquareDisplay.style.display = "block";
             }).catch(error => {
                 throw error;
@@ -135,8 +111,7 @@ let App = {
         App.UI.map.on("click", App.clickHandler);
         App.socket.onmessage = (m) => {
             let data = JSON.parse(m.data);
-            console.log(data);
-            let place = new Place(data.lat, data.long, data.name, data.type, data.description, data.creator);
+            addLocation({ lat: data.lat, long: data.long, name: data.name, type: data.type, address: "", distance: 0, rating: 0 }, data.description, data.creator);
         };
         let clickedRecommendation;
         App.UI.locationList.onclick = e => {
@@ -153,7 +128,10 @@ let App = {
                         .setLatLng([clickedlocationData.lat, clickedlocationData.long]) :
                     L.marker([clickedlocationData.lat, clickedlocationData.long], { icon: App.UI.foursquareLocationIndicator })
                         .addTo(App.UI.map));
-                App.UI.selectedFoursquareLocationMarker.bindPopup(clickedRecommendation.innerHTML);
+                App.UI.selectedFoursquareLocationMarker.bindPopup("<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + clickedlocationData.name + "</p>" +
+                    "<p style='font-size: 10px; margin: 3px; margin-bottom: 4px; font-weight: normal;'>" + clickedlocationData.type + "</p>" +
+                    "<p style='font-size: 11px; margin: 3px; font-weight: normal;'>" + clickedlocationData.address + "</p>" +
+                    "<p style='font-size: 8px; margin: 3px; margin-top: 4px; font-weight: normal;'>" + clickedlocationData.distance + "m away</p>");
                 App.UI.selectedFoursquareLocationMarker.openPopup();
                 clickedRecommendation.classList.add("locationlistentrySelected");
                 App.UI.map.panTo([App.userLatitude - (App.userLatitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lat) / 2, App.userLongitude - (App.userLongitude - App.UI.selectedFoursquareLocationMarker.getLatLng().lng) / 2]);
@@ -179,7 +157,7 @@ let App = {
         })).then(response => {
             return response.json();
         }).then(json => {
-            App.genLocationListHTML(json.response);
+            App.genLocationList(json.response);
             App.UI.foursquareDisplay.style.display = "block";
         }).catch(error => {
             throw error;
@@ -190,6 +168,13 @@ let App = {
             "<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
             "<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
             "<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
+            "<ul class='rating'>" +
+            "<li><button onclick='App.giveStar(this, 1);'></button></li>" +
+            "<li><button onclick='App.giveStar(this, 2);'></button></li>" +
+            "<li><button onclick='App.giveStar(this, 3);'></button></li>" +
+            "<li><button onclick='App.giveStar(this, 5);'></button></li>" +
+            "<li><button onclick='App.giveStar(this, 5);'></button></li>" +
+            "</ul>" +
             "</div>";
         App.locationData.push(params);
         return HTML;
@@ -197,7 +182,7 @@ let App = {
     genfoursquareRequest(params) {
         return "https://api.foursquare.com/v2/venues/explore?client_id=" + params.id + "&client_secret=" + params.secret + "&v=20180323&limit=" + params.limit + "&ll=" + params.lat + "," + params.long + "&query=" + params.query;
     },
-    genLocationListHTML(response) {
+    genLocationList(response) {
         let HTML = "";
         App.locationData = [];
         response.groups[0].items.sort((a, b) => {
@@ -209,7 +194,8 @@ let App = {
             type: i.venue.categories[0].name,
             distance: i.venue.location.distance,
             lat: i.venue.location.lat,
-            long: i.venue.location.lng
+            long: i.venue.location.lng,
+            rating: 0,
         }, index));
         App.UI.locationList.innerHTML = HTML;
         return HTML;
@@ -256,6 +242,12 @@ let App = {
             App.nextToggleAddLocationUIAnimationDirection = App.nextToggleAddLocationUIAnimationDirection == "normal" ? "reverse" : "normal";
         }, 0.000000000001);
         App.UI.submitLocationUI.style.display = (App.UI.submitLocationUI.style.display == "block" ? "none" : "block");
+    },
+    giveStar(button, rating) {
+        let ratedLocation = button.parentElement.parentElement.parentElement;
+        console.log(ratedLocation.id);
+        let ratedLocationData = App.locationData[parseInt(ratedLocation.id.split("listentry")[1])];
+        ratedLocationData.rating = rating;
     }
 };
 App.init();
