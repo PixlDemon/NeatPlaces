@@ -200,16 +200,16 @@ let App = {
 
 	},
 	genLocationListEntryHTML(params: LocationData, index: number) {
-		let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" +
-			"<p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p>" +
+		let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" + //<img src='star.png' style='width:10px; height:10px;'>
+			"<div style='display:flex;'><p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p><div class='staricon'>" + params.rating + "</div></div>" +
 			"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
 			"<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
 			"<ul class='rating'>" +
-			"<li><button onclick='App.giveStar(this, 1);'></button></li>" +
-			"<li><button onclick='App.giveStar(this, 2);'></button></li>" +
-			"<li><button onclick='App.giveStar(this, 3);'></button></li>" +
-			"<li><button onclick='App.giveStar(this, 5);'></button></li>" +
-			"<li><button onclick='App.giveStar(this, 5);'></button></li>" +
+			"<li><button class='staricon' onclick='App.giveStar(this, 1);'><img src='star.png'></button></li>" +
+			"<li><button class='staricon' onclick='App.giveStar(this, 2);'><img src='star.png'></button></li>" +
+			"<li><button class='staricon' onclick='App.giveStar(this, 3);'><img src='star.png'></button></li>" +
+			"<li><button class='staricon' onclick='App.giveStar(this, 5);'><img src='star.png'></button></li>" +
+			"<li><button class='staricon' onclick='App.giveStar(this, 5);'><img src='star.png'></button></li>" +
 			"</ul>" +
 			"</div>"
 		App.locationData.push(params);

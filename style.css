@@ -17,10 +17,32 @@ ul {
 ul li {
     list-style-type: none;
 }
-ul li button {
+/*ul li button {
     width: auto;
     height: auto;
-    margin: 4px;
+    background-color: yellow;
+    border-radius: 50%;
+    padding: 10px;
+    border: none;
+    outline: none;
+}
+ul li button img {
+    width: 20px;
+    height: 20px;
+}*/
+.staricon {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    border: none;
+    outline: none;
+    background-color: yellow;
+    border-radius: 50%;
+    padding: 6px;
+}
+.staricon img {
+    width: 20px;
+    height: 20px;
 }
 ul {
     flex-direction: row;
