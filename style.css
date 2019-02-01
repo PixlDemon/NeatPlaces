@@ -1,146 +1,168 @@
 html {
-    overflow: hidden;
-    height: 100%;
+	overflow: hidden;
+	height: 100%;
 }
 body {
-    height: 100%;
-    overflow: disabled;
+	height: 100%;
+	overflow: disabled;
 }
 html, body {
-    margin: 0;
-    padding: 0;
+	margin: 0;
+	padding: 0;
+}
+.rating {
+	width: auto;
+	height: auto;
+	unicode-bidi: bidi-override;
+	direction: rtl;
+	left: 0;
+}
+.rating ul > li {
+	display: inline-block;
+	position: relative;
+	width: 1.1em;
+	font-size: 20px;
+}
+.rating ul > li:hover:before,
+.rating ul > li:hover ~ li:before {
+	content: "\2605";
+	position: absolute;
+	color: gold;
 }
 ul {
-    padding: 10px;
-    margin: 0;
+	padding: 10px;
+	padding-left: 0px;
+	margin: 0;
 }
 ul li {
-    list-style-type: none;
+	list-style-type: none;
 }
-/*ul li button {
-    width: auto;
-    height: auto;
-    background-color: yellow;
-    border-radius: 50%;
-    padding: 10px;
-    border: none;
-    outline: none;
+ul li button {
+	width: auto;
+	height: auto;
+	background-color: yellow;
+	border-radius: 50%;
+	padding: 10px;
+	border: none;
+	outline: none;
 }
 ul li button img {
-    width: 20px;
-    height: 20px;
-}*/
+	width: 20px;
+	height: 20px;
+}
 .staricon {
-    display: inline-block;
-    width: auto;
-    height: auto;
-    border: none;
-    outline: none;
-    background-color: yellow;
-    border-radius: 50%;
-    padding: 6px;
+	display: inline-block;
+	width: auto;
+	height: auto;
+	border: none;
+	outline: none;
+	background-color: yellow;
+	border-radius: 50%;
+	padding: 6px;
 }
 .staricon img {
-    width: 20px;
-    height: 20px;
+	width: 20px;
+	height: 20px;
 }
 ul {
-    flex-direction: row;
+	flex-direction: row;
 }
 #locationsearch {
-    background: none;
-    margin: 15x;
-    padding: 0;
-    margin-left: 20%;
-    color:white;
-    border-bottom: 2px solid white;
-    caret-color: white;
+	background: none;
+	margin: 15x;
+	padding: 0;
+	margin-left: 20%;
+	color:white;
+	border-bottom: 2px solid white;
+	caret-color: white;
 }
 #map {
-    height: 100%;
-    width: 75%;
-    float: left;
-    animation-name: resizeMap;
-    animation-duration: 1s;
-    animation-fill-mode: forwards;
+	height: 100%;
+	width: 75%;
+	float: left;
+	animation-name: resizeMap;
+	animation-duration: 1s;
+	animation-fill-mode: forwards;
 }
 #addlocationui {
-    width: 10%;
-    float: left;
-    padding: 50px;
-    padding-top: 70px;
-    display: none; float:left;
+	width: 10%;
+	float: left;
+	padding: 50px;
+	padding-top: 70px;
+	display: none; float:left;
 }
 #locationlistheader {
-    padding:20px;
-    font-size: 15px;
-    color: #ededed;
-    background-color: #4f8fff;
-    margin: 0 !important;
-    display: flex;
+	padding:20px;
+	font-size: 15px;
+	color: #ededed;
+	background-color: #4f8fff;
+	margin: 0 !important;
+	display: flex;
 }
 #foursquaredisplay {
-    float: left;
-    margin-left: 0;
-    margin-top: 0;
-    padding-left: 0;
-    height: 100%;
+	float: left;
+	margin-left: 0;
+	margin-top: 0;
+	padding-left: 0;
+	height: 100%;
 }
 #foursquaredisplay {
-    height: 100%;
-    float: top;
-    
+	height: 100%;
+	float: top;
+	
 }
 #locationlist {
-    height: 100%;
-    overflow-y: scroll;
+	height: 100%;
+	overflow-y: scroll;
 }
 .locationlistentry {
-    padding: 20px;
+	padding: 20px;
 }
 .locationlistentry .rating {
-    display: none;
+	display: none;
 }
 .locationlistentry:hover {
-    background: lightgrey;
-    cursor: pointer;
+	background: lightgrey;
+	cursor: pointer;
 }
 .locationlistentrySelected {
-    background: lightblue !important;
+	background: lightblue !important;
 }
 .locationlistentrySelected .rating {
-    display: flex;
+	display: block;
 }
 input[type="text"], textarea {
-    padding: 6px;
-    width: 200px;
-    border: none;
+	padding: 6px;
+	width: 200px;
+	border: none;
 }
 #toggleaddlocationui, #addlocationui button {
-    padding: 10px 0;
-    border: none;
-    position: sticky;
-    bottom: 0;
-    width: 100%;
-    margin-top: 10px;
-    background-color: lightgrey;
-    outline: none;
+	padding: 10px 0;
+	border: none;
+	position: sticky;
+	bottom: 0;
+	width: 100%;
+	margin-top: 10px;
+	background-color: lightgrey;
+	outline: none;
 }
 #toggleaddlocationui:hover, #addlocationui button:hover {
-    background-color: grey;
-    color:white;
+	background-color: grey;
+	color:white;
 }
 p {
-    font-family: "Tahoma", Geneva, sans-serif;
-    font-size: 11px;
-    font-weight: bold;
-    visibility: inherit;
+	font-size: 11px;
+	font-weight: bold;
+	visibility: inherit;
+}
+* {
+	font-family: "Tahoma", Geneva, sans-serif;
 }
 *:focus {
-    outline: none;
+	outline: none;
 }
 
 @keyframes resizeMap {
-    from {width: 75%;}
-    to {width: 50%; }
+	from {width: 75%;}
+	to {width: 50%; }
 }

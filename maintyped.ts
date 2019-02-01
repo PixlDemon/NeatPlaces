@@ -22,11 +22,13 @@ function addLocation(data: LocationData, description: string, creator: string): 
 let App = {
 	socket: <WebSocket>new WebSocket("ws://10.20.0.103:8000"),
 	locationData: <LocationData[]>[],
+	ratings:<any> {},
 	username: <string>"Anon",
 	nextToggleAddLocationUIAnimationDirection: <string>"normal",
 	userPosition: <any>null,
 	userLatitude: <number>null,
 	userLongitude: <number>null,
+	initialLocationListData: <any> null,
 
 	UI: {
 		locationNameInput: <HTMLInputElement>document.getElementById("locationname"),
@@ -90,6 +92,7 @@ let App = {
 			})).then(response => {
 				return response.json();
 			}).then(json => {
+				App.initialLocationListData = json.response;
 				App.genLocationList(json.response);
 				App.UI.foursquareDisplay.style.display = "block";
 			}).catch(error => {
@@ -136,7 +139,13 @@ let App = {
 
 		App.socket.onmessage = (m: any) => {
 			let data = JSON.parse(m.data);
-			addLocation({ lat: data.lat, long: data.long, name: data.name, type: data.type, address: "", distance: 0, rating: 0}, data.description, data.creator);
+			if(data.hasOwnProperty("name")) {
+				addLocation({ lat: data.lat, long: data.long, name: data.name, type: data.type, address: "", distance: 0, rating: 0}, data.description, data.creator);
+			}
+			if(data.hasOwnProperty("rating")) {
+				App.ratings[data.location] = data.rating;
+				App.genLocationList(App.initialLocationListData);
+			}
 		}
 
 		let clickedRecommendation: HTMLElement;
@@ -147,11 +156,27 @@ let App = {
 
 				clickedRecommendation = <HTMLElement>e.target;
 
+				let starsGiven: number;
+				if(clickedRecommendation.tagName == "LI") {
+
+					starsGiven = 5 - Array.prototype.indexOf.call(clickedRecommendation.parentElement.childNodes, clickedRecommendation);
+
+				}
+
 				while (!clickedRecommendation.id.includes("listentry")) {
 					clickedRecommendation = clickedRecommendation.parentElement;
 				}
-				console.log(clickedRecommendation.id);
 				let clickedlocationData = App.locationData[parseInt(clickedRecommendation.id.split("listentry")[1])];
+
+				if(starsGiven != undefined) {
+					App.socket.send(JSON.stringify({
+						starsGiven: starsGiven,
+						name: clickedlocationData.name,
+						intent: "rateLocation"
+					}));
+
+					return;
+				}
 
 				App.UI.selectedFoursquareLocationMarker = (App.UI.selectedFoursquareLocationMarker ?
 
@@ -200,17 +225,25 @@ let App = {
 
 	},
 	genLocationListEntryHTML(params: LocationData, index: number) {
+		let ratingDisplay = (params.rating == 0 ? "<span style='color: gold; font-size: 20px; padding: 0; margin: 0; float:right;'>&#9733;No ratings yet</span>" : "<span style='color: gold; font-size: 20px; padding: 0; margin: 0; float:right;'>&#9733;" + params.rating + "</span>");
 		let HTML = "<div class='locationlistentry' id='listentry" + index + "'>" + //<img src='star.png' style='width:10px; height:10px;'>
-			"<div style='display:flex;'><p style='font-size: 11px; margin: 3px; font-weight: bold;'>" + params.name + "</p><div class='staricon'>" + params.rating + "</div></div>" +
+			"<div style='display:inline-block;'><p style='font-size: 11px; font-weight: bold;'><span style='vertical-align: middle; display: inline-block;'>" + params.name + "</span></p></div>" +
+			//"<span style='color: gold; font-size: 20px; padding: 0; margin: 0; float:right;'>&#9733;" + (params.rating == 0 ? "No ratings yet" : params.rating) + "</span>" +
+			ratingDisplay +
 			"<p style='font-size: 10px; margin: 3px; font-weight: normal;'>" + params.type + ", " + params.address + "</p>" +
 			"<p style='font-size: 8px; margin: 3px; font-weight: normal;'>" + params.distance + "m away" + "</p>" +
+			"<div style='display: flex; flex-direction: row;'>" +
+			"<div class='rating'>" +
+			//"<span>&#9734;</span><span>&#9734;</span><span>&#9734;</span><span>&#9734;</span><span>&#9734;</span>" +
 			"<ul class='rating'>" +
-			"<li><button class='staricon' onclick='App.giveStar(this, 1);'><img src='star.png'></button></li>" +
-			"<li><button class='staricon' onclick='App.giveStar(this, 2);'><img src='star.png'></button></li>" +
-			"<li><button class='staricon' onclick='App.giveStar(this, 3);'><img src='star.png'></button></li>" +
-			"<li><button class='staricon' onclick='App.giveStar(this, 5);'><img src='star.png'></button></li>" +
-			"<li><button class='staricon' onclick='App.giveStar(this, 5);'><img src='star.png'></button></li>" +
+			"<li>&#9734;</li>" +
+			"<li>&#9734;</li>" +
+			"<li>&#9734;</li>" +
+			"<li>&#9734;</li>" +
+			"<li>&#9734;</li>" +
 			"</ul>" +
+			"</div>" +
+			"</div>" +
 			"</div>"
 		App.locationData.push(params);
 		return HTML;
@@ -234,7 +267,7 @@ let App = {
 			distance: i.venue.location.distance,
 			lat: i.venue.location.lat,
 			long: i.venue.location.lng,
-			rating: 0,
+			rating: Math.round((App.ratings[i.venue.name] || {currentAvg: 0}).currentAvg * 10) / 10,
 		}, index));
 
 		App.UI.locationList.innerHTML = HTML;
@@ -271,7 +304,8 @@ let App = {
 			name: App.UI.locationNameInput.value,
 			type: App.UI.locationTypeDropdown.options[App.UI.locationTypeDropdown.selectedIndex].text,
 			description: App.UI.locationDescriptionInput.value,
-			creator: App.username
+			creator: App.username,
+			intent: "submitLocation"
 		}));
 		App.UI.reset();
 		App.toggleAddLocationUi();
